@@ -17,12 +17,20 @@ import java.util.regex.*;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
 
+
 public class ComsolSlicer {
     public static void main(String[] args) {
         try {
-            ModelUtil.initStandalone(false);
             // Call the run method of selection_test_mod to retrieve the Model object
-            Model model = Grabber_Demo_Real.run();
+            ModelUtil.initStandalone(false);
+            
+            // initialize motor relevant data 
+            double distancePerRev = 3.0e-3; 
+            double stepsPerRev = 800.0; 
+            double degreePerStep = 0.45;
+            
+            // run the comcol simulation file in directory 
+            Model model = Summer_Grabber.run();
             
             // obtain corresponding domain (voxel) magnetization data 
             List<List<double[]>> magnetizationData = DomainMagnetizationFinder(model);
@@ -34,15 +42,8 @@ public class ComsolSlicer {
 
             // sort domainPositionSizeList based on domain position data to organize list printable sequence
             List<List<double[]>> sortedGMData = PositionSorter(GeoMagData);
-            System.out.println("Combined Geometric and Magnetization Data: ");
-            // Iterate over each list in domainPositionSizeList
-            for (List<double[]> sublist : sortedGMData) {
-                // Iterate over each double array in the sublist
-                for (double[] array : sublist) {
-                    // Print out the contents of the double array
-                    System.out.println(Arrays.toString(array));
-                }
-            }
+
+            // generate and export GM code 
             createGMCode(sortedGMData);
 
         } catch (Exception e) {
@@ -53,15 +54,11 @@ public class ComsolSlicer {
         }
     }
 
-    public static void createGMCode(List<List<double[]>> GeoMagData) {
-        // initialize motor relevant data 
-        double distancePerRev = 3.0e-3; // TODO: change value [mm/revolution]
-        double stepsPerRev = 800.0; // TODO: change if microstepping [steps/revolution]
-        double degreePerStep = 0.45;
+    public static void createGMCode(List<List<double[]>> GeoMagData, double distancePerRev, double stepsPerRev, double degreePerStep) {
+        // initialize required steps for each motor
         int requiredSteps = 0;
-
-        // TODO: add function for user to set the name of the csv file name 
-        String filePath = "Demo_Grabber.csv";
+ 
+        String filePath = "Summer_Grabber.csv";
         try {
             // intialize file writer to the csv
             FileWriter fileWriter = new FileWriter(filePath);
